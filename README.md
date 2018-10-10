@@ -29,5 +29,28 @@ deploy chainSQL network
    sudo ./chainCtr stop --fake
    ```
 
-
 ## 0x01 Normal Network
+
+1. 初始化网络
+
+   ```
+   sudo ./chainCtr init
+   ```
+
+2. 加入网络
+
+   ```
+   sudo ./chainCtr join url
+   ```
+
+3. 启动网络
+
+   ```
+   sudo ./chainCtr start --wait
+   ```
+
+4. 停止网络
+
+   ```
+   sudo ./chainCtr stop
+   ```
