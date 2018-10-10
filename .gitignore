@@ -1,0 +1,13 @@
+chainCtr.log
+
+bin/chainsqld
+bin/chainsqld.cfg
+bin/debug.log
+bin/test.cfg
+bin/validators.txt
+bin/db
+
+script/*.pyc
+
+test/js/node_modules
+

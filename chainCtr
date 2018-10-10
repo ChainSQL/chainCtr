@@ -1,0 +1,244 @@
+#!/usr/bin/python
+# coding=utf8
+
+import os
+import argparse
+import sys
+import logging
+import json
+import time
+
+import script.config as config
+import script.unit as unit
+
+def print_usage():
+    print 'usage'
+    print 'chainCtr command [options]'
+    print '\n'
+    print 'commands:'
+    print ' start [options]     start chainsqld'
+    print '   eg: start [--fake]'
+    print ' stop [options]      stop chainsqld'
+    print '   eg: stop [--fake]'
+    print ' init [options]      initial env'
+    print '   eg: init [--fake]'
+    print ' config --json key:value ... -- [options] modify config'
+    print '   eg: config --json sync_db.type:mysql sync.db:ripple -- --id chainsql_id'
+    print ' test                test chainsqld network'
+
+    print '\n'
+    print 'options'
+    print ' --path path         specify path locals chainsqld' 
+    print ' --fake              A fake decentralized chainsqld network'
+    print ' --seeds n           generate n seeds'
+    print ' --json configs      modify config'
+    print ' --id id             chainsq\'s id'
+    print ' --wait              wait for network running successfully'
+
+
+def init_fake_network():
+    pwd = os.getcwd()
+    validators = 4
+
+    if(os.path.exists('/var/local/peersafe')):
+        os.system('rm -rf /var/local/peersafe')
+
+    # copy chainsql and config
+    for idx in range(validators):
+        path = '/var/local/peersafe/chainsqld/%d' % idx
+        mkdir = 'mkdir -p %s' % path
+        os.system(mkdir)
+
+        cp_chainsqld = 'cp %s/bin/chainsqld %s/' % (pwd, path)
+        os.system(cp_chainsqld)
+
+        cp_cfg = 'cp %s/config/chainsqld.cfg %s/' % (pwd, path)
+        os.system(cp_cfg)
+
+        cp_validators = 'cp %s/config/validators.txt %s/' % (pwd, path)
+    
+        os.system(cp_validators)
+
+    # set config
+    settings = []
+    validators_set = []
+    ips_fixed = []
+    os.chdir('%s/bin' % pwd)
+    seeds = unit.generate_seeds(validators)
+    for idx in range (len(seeds)):
+        seed = seeds[idx]
+        jdata = json.loads(seed)
+
+        rpc_port = 5005 + idx
+        peer_port = 5126 + idx
+        ws_port = 6006 + idx
+        
+        c = {}
+        c['validation_public_key'] = jdata['result']['validation_public_key'] 
+        c['validation_seed'] = jdata['result']['validation_seed'] 
+        c['rpc_port'] = rpc_port
+        c['peer_port'] = peer_port
+        c['ws_port'] = ws_port
+        settings.append(c)
+        validators_set.append(c['validation_public_key'])
+        ips_fixed.append('127.0.0.1:%d' % peer_port)
+
+    for idx in range(len(settings)):
+        path = '/var/local/peersafe/chainsqld/%d' % idx
+        os.chdir(path)
+
+        config.set_rpc_host('127.0.0.1:%d' % settings[idx]['rpc_port'])
+        config.set_peer_host('127.0.0.1:%d' % settings[idx]['peer_port'])
+        config.set_ws_host('127.0.0.1:%d' % settings[idx]['ws_port'])
+        config.set_validation_public_key(settings[idx]['validation_public_key'])
+        config.set_validation_seed(settings[idx]['validation_seed'])
+        
+        for ip in ips_fixed:
+            if ip.find(str(settings[idx]['peer_port'])) == -1:
+                config.append_ip_fixed(ip)
+
+        for validator in validators_set:
+            if validator == settings[idx]['validation_public_key']:
+                config.append_validator(validator)
+
+    os.chdir('%s/bin' % pwd)
+    unit.stop_chainsqled() 
+
+def init_normal_network():
+    print 'not impl'
+
+def handle_config(argv):
+    chainsqld_id = None
+    for idx in range(len(argv)):
+        print argv[idx]
+
+def handle_test(argv):
+    pwd = os.getcwd()
+    os.chdir('%s/test/js' % pwd)
+    if os.path.exists('./node_modules') == False:
+        os.system('npm install chainsql')
+        os.system('npm install single-line-log')
+        os.system('npm install string-random')
+
+    os.system('node test_preLoader.js')
+    
+def handle_start(argv):
+    fake = False
+    wait = False
+    for idx in range(2,len(argv)):
+        if argv[idx] == '--fake':
+            fake = True
+        
+        if argv[idx] == '--wait':
+            wait = True
+
+    if fake == True:
+        start_fake_network(wait)
+    else:
+        start_normal_network(wait)
+
+def start_fake_network(wait):
+    path = '/var/local/peersafe/chainsqld'
+    for idx in range(4):
+        chainsqld_path = '%s/%d' %(path, idx)
+        os.chdir(chainsqld_path)
+        unit.execute_chainsqld()
+
+
+    while(wait):
+        watcher = []
+        for idx in range(4):
+            chainsqld_path = '%s/%d' %(path, idx)
+            os.chdir(chainsqld_path)
+            info = unit.chainsqld_server_info()
+            
+            e = {}
+            e['id'] = idx
+            e['hostid'] = info['result']['info']['hostid']
+            e['peers'] = info['result']['info']['peers']
+            e['complete_ledgers'] = info['result']['info']['complete_ledgers']
+            e['status'] = info['result']['status']
+
+            watcher.append(e)
+
+        Finished = True
+        print 'id\thostid\tpeers\tcompleted\tstatus'
+        for e in watcher:
+            completed = False
+            if e['complete_ledgers'] != 'empty':
+                completed = True
+            else:
+                Finished = False
+
+            print '%s\t%s\t%s\t%s\t%s' %(e['id'], e['hostid'], e['peers'], completed, e['status'])
+        print('\r')
+
+        if Finished:
+            break
+
+        time.sleep(5)
+
+
+def start_normal_network(wait):
+    print 'not impl'
+
+def handle_init(argv):
+    fake = False
+    seeds = 5
+    for idx in range(len(argv)):
+        if argv[idx] == '--fake':
+            fake = True
+        
+        if argv[idx] == '--seeds':
+            idx += 1
+            seeds = argv[idx]
+
+
+    if fake == True:
+        init_fake_network()
+    else:
+        init_normal_network()
+
+def handle_stop(argv):
+    path = '/var/local/peersafe/chainsqld'
+    if len(argv) > 2:
+        for idx in range(2, len(argv)):
+            if argv[idx] == '--fake':
+                for i in range(4):
+                    rpath  = '%s/%d' %(path, i)
+                    os.chdir(rpath)
+                    unit.stop_chainsqled()
+    else:
+        os.chdir(path)
+        unit.stop_chainsqled()
+
+def handle_commands(argv):
+    cmd = argv[1]
+    if cmd == 'start':
+        handle_start(argv)
+    elif cmd == 'stop':
+        handle_stop(argv)
+    elif cmd == 'init':
+        handle_init(argv)
+    elif cmd == 'config':
+        handle_config(argv)
+    elif cmd == 'test':
+        handle_test(argv)
+
+def main():
+    global logging
+    logging.basicConfig(filename='chainCtr.log', level=logging.INFO)
+    logging.info('Started')
+    
+    argv = sys.argv
+    if len(argv) < 2:
+        print_usage()
+        exit(1)
+
+    handle_commands(argv)
+    
+    logging.info('Finished')
+
+
+if __name__ == '__main__':
+    main()
