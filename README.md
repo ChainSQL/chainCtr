@@ -14,7 +14,7 @@ deploy chainSQL network
 2. 启动网络
 
    ```
-   sudo ./chainCtr start --fake
+   sudo ./chainCtr start --fake --wait
    ```
 
 3. 测试网络
