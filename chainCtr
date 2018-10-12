@@ -38,6 +38,8 @@ def print_usage():
     print ' --id id             chainsq\'s id'
     print ' --host host         specify host that we should join'
     print ' --wait              wait for network running successfully'
+    print ' --local             only effects local'
+    print ' --mysql             specify a mysql for local chainqld'
 
 
 def init_fake_network():
@@ -267,9 +269,15 @@ def handle_stop(argv):
                     os.chdir(rpath)
                     unit.stop_chainsqld()
     else:
-        #os.chdir(path)
-        #unit.stop_chainsqld()
-        join.stop()
+        stop_local = False
+        for idx in range(2, len(argv)):
+            if argv[idx] == '--local':
+                stop_local = True
+        if stop_local == True:
+            os.chdir(path)
+            unit.stop_chainsqld()
+        else:
+            join.stop()
 
 def handle_commands(argv):
     cmd = argv[1]

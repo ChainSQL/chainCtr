@@ -99,12 +99,12 @@ def TCPClientHandler(source, data):
                     time.sleep(1)
                 print 'chainsqld has started completely.'
         elif jdata['cmd'] == 'stop':
-            if unit.chainsqld_is_running() == True:
-                path = '/var/local/peersafe/chainsqld'
-                os.chdir(path)
-                print 'chainsqld is stopping'
-                unit.stop_chainsqld()
-                print 'chainsqld has stopped completely.'
+            #if unit.chainsqld_is_running() == True:
+            path = '/var/local/peersafe/chainsqld'
+            os.chdir(path)
+            print 'chainsqld is stopping'
+            unit.stop_chainsqld()
+            print 'chainsqld has stopped completely.'
 
         os.chdir(pwd)
 

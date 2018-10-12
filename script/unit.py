@@ -76,7 +76,7 @@ def generate_seeds(n):
 
 def has_mysql():
     version = os.popen('mysql --version 2>/dev/null|awk \'{print $1}\'').read()
-    if version == 'mysql':
+    if version.find('mysql') != -1:
         return True
     else:
         return False
