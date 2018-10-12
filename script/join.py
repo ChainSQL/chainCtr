@@ -122,7 +122,11 @@ def TCPClientHandler(source, data):
         print e
         sys.exit(1)
 
-def join(host):
+def join(host, mysql = None):
+    if mysql != None:
+        unit.mysql_started(mysql)
+        sys.exit(0)
+
     pwd = os.getcwd()
     signal.signal(signal.SIGINT, handler_signal)
     path = '/var/local/peersafe/chainsqld'

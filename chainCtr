@@ -127,12 +127,48 @@ def handle_config(argv):
         print argv[idx]
 
 def handle_join(argv):
+    host = None
+    mysql = None
     for idx in range(2, len(argv)):
         if argv[idx] == '--host':
             idx += 1
             host = argv[idx]
-            v = host.split(':')
-            join.join((v[0], int(v[1])))
+            #join.join((v[0], int(v[1])))
+        elif argv[idx] == '--mysql':
+            if unit.has_mysql() == False:
+                print 'Try: sudo apt install mysql-client-core-5.7'
+                sys.exit(1)
+
+            idx += 1
+            param = argv[idx]
+            mysql = {}
+            while param != '--':
+                try:
+                    kv = param.split(':')
+                    if len(kv) != 2:
+                        print argv
+                        sys.exit(1)
+
+                    key = kv[0]
+                    value = kv[1]
+                    mysql[key] = value
+
+                    idx += 1
+
+                    if idx > 20:
+                        print 'mysql\'s params must be terminated by \'--\''
+                        sys.exit(1)
+
+                    param = argv[idx]
+                except IndexError as e:
+                    print argv
+                    print 'mysql\'s params must be terminated by \'--\''
+                    sys.exit(1)
+
+    #print json.loads(json.dumps(mysql))
+    v = host.split(':')
+    join.join((v[0], int(v[1])), json.loads(json.dumps(mysql)))
+
 
 def handle_test(argv):
     pwd = os.getcwd()

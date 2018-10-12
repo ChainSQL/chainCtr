@@ -66,7 +66,6 @@ def generate_one_seed():
         return None
 
 def generate_seeds(n):
-    print n
     result = []
     execute_chainsqld()
     for i in range(n):
@@ -74,6 +73,34 @@ def generate_seeds(n):
         result.append(seed)
 
     return result
+
+def has_mysql():
+    version = os.popen('mysql --version 2>/dev/null|awk \'{print $1}\'').read()
+    if version == 'mysql':
+        return True
+    else:
+        return False
+
+def mysql_started(mysql):
+    host = '127.0.0.1'
+    port = 3306
+    user = 'root'
+    pwd = None
+    db = 'chainsql'
+    if mysql.has_key('host'):
+        host = msyql['host']
+    if mysql.has_key('port'):
+        port = msyql['port']
+    if mysql.has_key('user'):
+        user = msyql['user']
+    if mysql.has_key('pwd'):
+        pwd = msyql['port']
+    if mysql.has_key('db'):
+        db = msyql['db']
+
+    mysql = 'msyql -u%s -h%s -P%d  -e \'select 1\' -p' %(user, host, port)
+    version = os.popen(mysql).read()
+    print version
 
 def node_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
