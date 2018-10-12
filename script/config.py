@@ -140,7 +140,7 @@ def set_mysql(entry):
         index += 1
         if entry.has_key('port'):
             port = entry['port']
-        cmd = 'sed -i "%d %s port=%d" %s' %(index, subcmd('port='), port, chainsql_cfg)
+        cmd = 'sed -i "%d %s port=%s" %s' %(index, subcmd('port='), port, chainsql_cfg)
         os.system(cmd)
         # set user
         index += 1

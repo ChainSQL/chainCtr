@@ -88,19 +88,23 @@ def mysql_started(mysql):
     pwd = None
     db = 'chainsql'
     if mysql.has_key('host'):
-        host = msyql['host']
+        host = mysql['host']
     if mysql.has_key('port'):
-        port = msyql['port']
+        port = mysql['port']
     if mysql.has_key('user'):
-        user = msyql['user']
+        user = mysql['user']
     if mysql.has_key('pwd'):
-        pwd = msyql['port']
+        pwd = mysql['port']
     if mysql.has_key('db'):
-        db = msyql['db']
+        db = mysql['db']
 
-    mysql = 'msyql -u%s -h%s -P%d  -e \'select 1\' -p' %(user, host, port)
+    mysql = 'mysql -u%s -h%s -P%s  -e \'select 1\' -p' %(user, host, port)
     version = os.popen(mysql).read()
-    print version
+    if len(version) == 0:
+        print version
+        return False
+    else:
+       return True
 
 def node_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

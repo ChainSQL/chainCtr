@@ -123,8 +123,7 @@ def TCPClientHandler(source, data):
         sys.exit(1)
 
 def join(host, mysql = None):
-    if mysql != None:
-        unit.mysql_started(mysql)
+    if mysql != None and unit.mysql_started(mysql) == False:
         sys.exit(0)
 
     pwd = os.getcwd()
@@ -146,6 +145,9 @@ def join(host, mysql = None):
         config.set_ws_host('0.0.0.0:6006')
         config.set_validation_public_key(seed['result']['validation_public_key'])
         config.set_validation_seed(seed['result']['validation_seed'])
+
+        if mysql != None:
+            config.set_mysql(mysql)
 
         defaultCfg.add_validation(seed)
 
