@@ -30,6 +30,15 @@ def set_host(protocol, host):
         cmd = 'sed -i "%d c ip = %s" %s' %(number, vector[0], chainsql_cfg)
         os.system(cmd)
 
+def set_admin_ip(protocol, ip):
+    protocol = '\[%s\]' % protocol
+    number = get_line_number(protocol, chainsql_cfg)
+    if number != -1:
+        number += 3
+        cmd = 'sed -i "%d c admin = %s" %s' %(number, ip, chainsql_cfg)
+        os.system(cmd)
+
+
 def set_rpc_host(host='127.0.0.1:5005'):
     set_host('port_rpc_admin_local', host);
 
@@ -38,6 +47,12 @@ def set_peer_host(host='127.0.0.1:51235'):
 
 def set_ws_host(host='127.0.0.1:6006'):
     set_host('port_ws_admin_local', host);
+
+def set_rpc_admin_ip(ip = '127.0.0.1'):
+    set_admin_ip('port_rpc_admin_local', ip)
+
+def set_ws_admin_ip(ip = '127.0.0.1'):
+    set_admin_ip('port_ws_admin_local', ip)
 
 def set_validation_public_key(key):
     number = get_line_number('\[validation_public_key\]', chainsql_cfg)

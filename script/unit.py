@@ -3,12 +3,13 @@
 import os
 import json
 import time
+import socket
 
 def stop_chainsqled():
     #os.popen("ps -ef|grep chainsqld|grep -v grep|awk '{cmd=\"kill -9 \"$2;system(cmd)}'").read()
     try:
         while(True):
-            output = os.popen('./chainsqld stop').read()
+            output = os.popen('./chainsqld stop 2>/dev/null').read()
             jdata = json.loads(output)
             if 'error' in jdata:
                 return True
@@ -18,7 +19,8 @@ def stop_chainsqled():
         return False
 
 def execute_chainsqld():
-    os.popen('./chainsqld > /dev/null &').read()
+    #os.popen('./chainsqld > /dev/null &').read()
+    os.popen('./chainsqld 2>&1  &')
     count = 1
     while(chainsqld_started() == False):
         if (++count) > 5:
@@ -28,7 +30,7 @@ def execute_chainsqld():
 
 def chainsqld_started():
     try:
-        output = os.popen('./chainsqld server_info').read()
+        output = os.popen('./chainsqld server_info 2>/dev/null').read()
         jdata = json.loads(output)
         if (jdata['result']['status']) == 'success':
             return True
@@ -58,7 +60,7 @@ def chainsqld_server_info():
 
 def generate_one_seed():
     try:
-        output = os.popen('./chainsqld validation_create').read()
+        output = os.popen('./chainsqld validation_create 2>/dev/null').read()
         return output
     except:
         return None
@@ -72,3 +74,10 @@ def generate_seeds(n):
         result.append(seed)
 
     return result
+
+def node_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip

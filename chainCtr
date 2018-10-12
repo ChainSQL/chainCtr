@@ -10,6 +10,8 @@ import time
 
 import script.config as config
 import script.unit as unit
+import script.join as join
+import script.init as init
 
 def print_usage():
     print 'usage'
@@ -22,6 +24,7 @@ def print_usage():
     print '   eg: stop [--fake]'
     print ' init [options]      initial env'
     print '   eg: init [--fake]'
+    print ' join --host host    join chainsql network'
     print ' config --json key:value ... -- [options] modify config'
     print '   eg: config --json sync_db.type:mysql sync.db:ripple -- --id chainsql_id'
     print ' test                test chainsqld network'
@@ -33,6 +36,7 @@ def print_usage():
     print ' --seeds n           generate n seeds'
     print ' --json configs      modify config'
     print ' --id id             chainsq\'s id'
+    print ' --host host         specify host that we should join'
     print ' --wait              wait for network running successfully'
 
 
@@ -105,12 +109,30 @@ def init_fake_network():
     unit.stop_chainsqled() 
 
 def init_normal_network():
-    print 'not impl'
+    pwd = os.getcwd()
+    os.chdir('%s/bin' % pwd)
+
+    config.set_rpc_host('0.0.0.0:7788')
+    config.set_rpc_admin_ip('0.0.0.0')
+
+    unit.stop_chainsqled()
+    unit.execute_chainsqld()
+
+    init.init_normal_network()
+
 
 def handle_config(argv):
     chainsqld_id = None
     for idx in range(len(argv)):
         print argv[idx]
+
+def handle_join(argv):
+    for idx in range(2, len(argv)):
+        if argv[idx] == '--host':
+            idx += 1
+            host = argv[idx]
+            v = host.split(':')
+            join.join((v[0], int(v[1])))
 
 def handle_test(argv):
     pwd = os.getcwd()
@@ -180,7 +202,7 @@ def start_fake_network(wait):
 
 
 def start_normal_network(wait):
-    print 'not impl'
+    join.start()
 
 def handle_init(argv):
     fake = False
@@ -222,6 +244,8 @@ def handle_commands(argv):
         handle_init(argv)
     elif cmd == 'config':
         handle_config(argv)
+    elif cmd == 'join':
+        handle_join(argv)
     elif cmd == 'test':
         handle_test(argv)
 
