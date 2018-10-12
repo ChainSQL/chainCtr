@@ -176,9 +176,9 @@ def handle_test(argv):
     pwd = os.getcwd()
     os.chdir('%s/test/js' % pwd)
     if os.path.exists('./node_modules') == False:
-        os.system('npm install chainsql')
-        os.system('npm install single-line-log')
-        os.system('npm install string-random')
+        os.system('npm install chainsql --save')
+        os.system('npm install single-line-log --save')
+        os.system('npm install string-random --save')
 
     os.system('node test_preLoader.js')
     

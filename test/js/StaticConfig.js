@@ -127,7 +127,7 @@ var Records = [
 ];
 
 var ChainSQLEntry = {
-    URL: 'ws://127.0.0.1:6007',
+    URL: 'ws://127.0.0.1:6006',
     RootAccount:{
         'secret': 'xnoPBzXtMeMyMHUVTgbuqAfg1SUTb',
         'address': 'zHb9CJAWyB4zj91VRWn96DkukG4bwdtyTh'
