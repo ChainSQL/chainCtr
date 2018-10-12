@@ -262,22 +262,22 @@ def handle_init(argv):
 def handle_stop(argv):
     path = '/var/local/peersafe/chainsqld'
     if len(argv) > 2:
+        stop_local = False
+
         for idx in range(2, len(argv)):
             if argv[idx] == '--fake':
                 for i in range(4):
                     rpath  = '%s/%d' %(path, i)
                     os.chdir(rpath)
                     unit.stop_chainsqld()
-    else:
-        stop_local = False
-        for idx in range(2, len(argv)):
             if argv[idx] == '--local':
                 stop_local = True
-        if stop_local == True:
-            os.chdir(path)
-            unit.stop_chainsqld()
-        else:
-            join.stop()
+
+            if stop_local == True:
+                os.chdir(path)
+                unit.stop_chainsqld()
+    else:
+        join.stop()
 
 def handle_commands(argv):
     cmd = argv[1]
