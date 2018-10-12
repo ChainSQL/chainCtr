@@ -55,6 +55,12 @@ class client(asyncore.dispatcher_with_send):
                 del clients[self.__host]
                 deploy_normal_network = True
                 self.send(message.success('start'))
+            elif jdata['cmd'] == 'stop':
+                self.send(message.success('stop'))
+                del clients[self.__host]
+                for key, client in clients.iteritems():
+                    client.sendmsg(data)
+
         except ValueError as e:
             print 'Handle read data failure. %s' % e
             print data

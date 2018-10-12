@@ -83,27 +83,28 @@ def TCPClientHandler(source, data):
     def handle_command(jdata):
         pwd = os.getcwd()
         if jdata['cmd'] == 'deploy':
+            if unit.chainsqld_is_running() == False:
+                ips_fixed = jdata['conf']['ips_fixed']
+                validators = jdata['conf']['validators']
 
-            ips_fixed = jdata['conf']['ips_fixed']
-            validators = jdata['conf']['validators']
+                path = '/var/local/peersafe/chainsqld'
+                os.chdir(path)
+                for ip in ips_fixed:
+                    config.append_ip_fixed(ip)
+                config.append_validators(validators)
 
-            path = '/var/local/peersafe/chainsqld'
-            os.chdir(path)
-            for ip in ips_fixed:
-                config.append_ip_fixed(ip)
-            config.append_validators(validators)
-
-            print 'chainsqld is starting'
-            unit.execute_chainsqld()
-            while unit.chainsqld_is_running() == False:
-                time.sleep(1)
-            print 'chainsqld has started completely.'
+                print 'chainsqld is starting'
+                unit.execute_chainsqld()
+                while unit.chainsqld_is_running() == False:
+                    time.sleep(1)
+                print 'chainsqld has started completely.'
         elif jdata['cmd'] == 'stop':
-            path = '/var/local/peersafe/chainsqld'
-            os.chdir(path)
-            print 'chainsqld is stopping'
-            unit.stop_chainsqld()
-            print 'chainsqld has stopped completely.'
+            if unit.chainsqld_is_running() == True:
+                path = '/var/local/peersafe/chainsqld'
+                os.chdir(path)
+                print 'chainsqld is stopping'
+                unit.stop_chainsqld()
+                print 'chainsqld has stopped completely.'
 
         os.chdir(pwd)
 
@@ -153,14 +154,20 @@ def join(host):
 
 
 def start():
-    host = os.popen('cat master').read().split(':')
-    request = message.startRequest('chainSQL')
-    send(host[0], int(host[1]), request)
+    try:
+        host = os.popen('cat master').read().split(':')
+        request = message.startRequest('chainSQL')
+        send(host[0], int(host[1]), request)
+    except IndexError as e:
+        print 'please join network firstly.'
 
 def stop():
-    host = os.popen('cat master').read().split(':')
-    request = message.stopRequest()
-    send(host[0], int(host[1]), request)
+    try:
+        host = os.popen('cat master').read().split(':')
+        request = message.stopRequest()
+        send(host[0], int(host[1]), request)
+    except IndexError as e:
+        print 'please join network firstly.'
 
 if __name__ == '__main__':
     sets = setting()
