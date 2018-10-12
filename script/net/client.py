@@ -6,12 +6,14 @@ import socket
 import asyncore
 
 def send(ip, port, message):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((ip, port))
     try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((ip, port))
         sock.sendall(message)
         response = sock.recv(1024)
         print "Received: {}".format(response)
+    except socket.error as e:
+        print e, (ip, port)
     finally:
         sock.close()
 
@@ -31,7 +33,7 @@ class TCPClient(asyncore.dispatcher):
         pass
 
     def handle_close(self):
-        print 'close to %s:%d' % (self.address[0], self.address[1])
+        print 'close to ', self.address
         self.close()
 
     def handle_read(self):

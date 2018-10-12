@@ -106,17 +106,17 @@ def init_fake_network():
                 config.append_validator(validator)
 
     os.chdir('%s/bin' % pwd)
-    unit.stop_chainsqled() 
+    unit.stop_chainsqld() 
 
 def init_normal_network():
     pwd = os.getcwd()
     os.chdir('%s/bin' % pwd)
 
-    config.set_rpc_host('0.0.0.0:7788')
-    config.set_rpc_admin_ip('0.0.0.0')
+    #config.set_rpc_host('0.0.0.0:7788')
+    #config.set_rpc_admin_ip('0.0.0.0')
 
-    unit.stop_chainsqled()
-    unit.execute_chainsqld()
+    #unit.stop_chainsqld()
+    #unit.execute_chainsqld()
 
     init.init_normal_network()
 
@@ -229,10 +229,11 @@ def handle_stop(argv):
                 for i in range(4):
                     rpath  = '%s/%d' %(path, i)
                     os.chdir(rpath)
-                    unit.stop_chainsqled()
+                    unit.stop_chainsqld()
     else:
-        os.chdir(path)
-        unit.stop_chainsqled()
+        #os.chdir(path)
+        #unit.stop_chainsqld()
+        join.stop()
 
 def handle_commands(argv):
     cmd = argv[1]

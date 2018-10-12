@@ -63,15 +63,15 @@ def deploy_local_chainsqld():
     os.system(mkdir)
 
     cp_chainsqld = 'cp %s/bin/chainsqld %s/' % (pwd, path)
-    print cp_chainsqld
+    #print cp_chainsqld
     os.system(cp_chainsqld)
 
     cp_cfg = 'cp %s/config/chainsqld.cfg %s/' % (pwd, path)
-    print cp_cfg
+    #print cp_cfg
     os.system(cp_cfg)
 
     cp_validators = 'cp %s/config/validators.txt %s/' % (pwd, path)
-    print cp_validators
+    #print cp_validators
     os.system(cp_validators)
 
 
@@ -81,8 +81,8 @@ def TCPClientHandler(source, data):
             print 'joined to %s:%d successfully.' % (source[0], source[1])
 
     def handle_command(jdata):
+        pwd = os.getcwd()
         if jdata['cmd'] == 'deploy':
-            pwd = os.getcwd()
 
             ips_fixed = jdata['conf']['ips_fixed']
             validators = jdata['conf']['validators']
@@ -93,9 +93,19 @@ def TCPClientHandler(source, data):
                 config.append_ip_fixed(ip)
             config.append_validators(validators)
 
+            print 'chainsqld is starting'
             unit.execute_chainsqld()
+            while unit.chainsqld_is_running() == False:
+                time.sleep(1)
+            print 'chainsqld has started completely.'
+        elif jdata['cmd'] == 'stop':
+            path = '/var/local/peersafe/chainsqld'
+            os.chdir(path)
+            print 'chainsqld is stopping'
+            unit.stop_chainsqld()
+            print 'chainsqld has stopped completely.'
 
-            os.chdir(pwd)
+        os.chdir(pwd)
 
     try:
         jdata = json.loads(data)
@@ -112,20 +122,16 @@ def TCPClientHandler(source, data):
         sys.exit(1)
 
 def join(host):
-
     pwd = os.getcwd()
-
     signal.signal(signal.SIGINT, handler_signal)
-
-    ip = host[0]
-    port = host[1]
-
     path = '/var/local/peersafe/chainsqld'
     defaultCfg = setting()
     if os.path.exists(path) == False:
-        config.set_rpc_host('%s:7788' % ip)
         os.chdir('%s/bin' % pwd)
+        config.set_rpc_host('127.0.0.1:5005')
+        unit.execute_chainsqld()
         seed = json.loads(unit.generate_one_seed())
+        unit.stop_chainsqld()
         os.chdir(pwd)
         deploy_local_chainsqld()
         # set default configuration
@@ -138,8 +144,8 @@ def join(host):
 
         defaultCfg.add_validation(seed)
 
-
     os.chdir(pwd)
+    os.system('echo %s:%d > master' % (host[0], host[1]))
     client = TCPClient(host, TCPClientHandler)
     request = message.joinRequest('chainSQL', defaultCfg.dumps())
     client.sendmsg(request)
@@ -147,9 +153,14 @@ def join(host):
 
 
 def start():
+    host = os.popen('cat master').read().split(':')
     request = message.startRequest('chainSQL')
-    send('127.0.0.1', 7670, request)
+    send(host[0], int(host[1]), request)
 
+def stop():
+    host = os.popen('cat master').read().split(':')
+    request = message.stopRequest()
+    send(host[0], int(host[1]), request)
 
 if __name__ == '__main__':
     sets = setting()

@@ -13,6 +13,7 @@ import message
 
 #import net.service as service
 from net.service import *
+import unit
 
 clients = {}
 ips_fixed = []
@@ -120,7 +121,18 @@ def init_normal_network(listen_tcp_port = 7670):
     w = worker()
     w.start()
 
-    print 'listen on %d' % listen_tcp_port
+    node_ip = unit.node_ip()
+    #print '**********************************************************************'
+    #print '*                                                                    *'
+    #print '*                    @@@@@@@@  @     @  @@@@@@@                      *'
+    #print '*                    @         @     @  @     @                      *'
+    #print '*                    @         @@@@@@@  @     @                      *'
+    #print '*                    @         @     @  @     @                      *'
+    #print '*                    @@@@@@@@  @     @  @@@@@@@                      *'
+    #print '*                                                                    *'
+    #print '**********************************************************************'
+    print 'Please using the below instruction for joining network on very nodes'
+    print '  chainCtr join --host %s:%d' %(node_ip, listen_tcp_port)
 
     server.run_forever()
     w.join()

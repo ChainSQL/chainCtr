@@ -27,6 +27,13 @@ def startRequest(hostid):
     """
     return request % hostid
 
+def stopRequest():
+    return """
+    {
+        "cmd":"stop"
+    }
+    """
+
 def deployRequest(ips, public_keys):
     request = {}
     request['cmd'] = 'deploy'

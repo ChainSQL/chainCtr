@@ -5,7 +5,7 @@ import json
 import time
 import socket
 
-def stop_chainsqled():
+def stop_chainsqld():
     #os.popen("ps -ef|grep chainsqld|grep -v grep|awk '{cmd=\"kill -9 \"$2;system(cmd)}'").read()
     try:
         while(True):
@@ -41,9 +41,9 @@ def chainsqld_started():
 
 def chainsqld_is_running():
     try:
-        output = os.popen('./chainsqld server_info').read()
+        output = os.popen('./chainsqld server_info 2>/dev/null').read()
         jdata = json.loads(output)
-        if (jdata['result']['complete_ledgers']) != 'empty':
+        if (jdata['result']['info']['complete_ledgers']) != 'empty':
             return True
         else:
             return False

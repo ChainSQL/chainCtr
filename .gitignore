@@ -8,6 +8,9 @@ bin/validators.txt
 bin/db
 
 script/*.pyc
+script/net/*.pyc
+
+master
 
 test/js/node_modules
 
