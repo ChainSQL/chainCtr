@@ -1,0 +1,85 @@
+#!/bin/bash
+
+usage() {
+    echo "用于观察 chainsqld 运行情况"
+    echo
+    echo "usage watcheChainSQL [options]"
+    echo "  OPTIONS"
+    echo "   -q|--period		指定多少秒刷新一次, 默认 1 秒"
+    echo "   --path		指定 chainSQL 路径"
+    echo "   -c|--count		统计几次后退出"
+}
+
+pwd=`pwd`
+
+POSITIONAL=()
+
+period=1
+path=$pwd
+count=-1
+
+while [[ $# -gt 0 ]]
+do
+    key=$1
+    case $key in
+        -p|--period)
+            if [ ! -n "$2" ]; then
+                period=1
+            else
+                period=$2
+            fi
+            shift 	# pass argument
+            shift
+            ;;
+        --path)
+            if [ ! -n "$2" ]; then
+                path=$pwd
+            else
+                path=$2
+            fi
+            shift
+            shift
+            ;;
+        -c|--count)
+            if [ ! -n "$2" ]; then
+                count=-1
+            else
+                count=$2
+            fi
+            shift
+            shift
+            ;;
+        *)
+            usage
+            shift
+            ;;
+    esac
+done
+
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+cd $path
+
+echo
+printf "%-20s %-10s %-5s %-15s %-20s %-10s %-10s\n" "host" "version" "peers" "uptime" "completes" "quorum" "status"
+
+n=1
+while true; do
+    if [[ $count -gt 0 ]]; then
+        let "n = $n + 1"
+        if [[ $n -gt $count ]]; then
+            echo
+            exit 0
+        fi
+    fi
+    info=`./chainsqld server_info 2>/dev/null`
+    host=`echo $info|jq .result.info.hostid|sed 's/\"//g'`
+    version=`echo $info|jq .result.info.build_version|sed 's/\"//g'`
+    peers=`echo $info|jq .result.info.peers|sed 's/\"//g'`
+    uptime=`echo $info|jq .result.info.uptime|sed 's/\"//g'`
+    completes=`echo $info|jq .result.info.complete_ledgers|sed 's/\"//g'`
+    validation_quorum=`echo $info|jq .result.info.validation_quorum|sed 's/\"//g'`
+    stat=`echo $info|jq .result.status|sed 's/\"//g'`
+    printf "\r%-20s %-10s %-5s %-15s %-20s %-10s %-10s" $host $version $peers $uptime $completes $validation_quorum $stat
+    sleep $period
+done

@@ -1,0 +1,86 @@
+#!/bin/bash
+
+usage() {
+    echo "用于停止 chainsqld 运行"
+    echo
+    echo "usage stopChainSQL [options]"
+    echo "  OPTIONS"
+    echo "   --wait		停止 chainSQL 直到服务请求没有响应"
+    echo "   --path		指定 chainSQL 路径"
+}
+
+pwd=`pwd`
+
+POSITIONAL=()
+
+wait=false
+path=$pwd
+
+while [[ $# -gt 0 ]]
+do
+    key=$1
+    case $key in
+        --wait)
+            wait=true
+            shift 	# pass argument
+            ;;
+        --path)
+            if [ ! -n "$2" ]; then
+                path=$pwd
+            else
+                path=$2
+            fi
+            shift
+            shift
+            ;;
+        *)
+            usage
+            shift
+            ;;
+    esac
+done
+
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [ -z $path ]; then
+    echo "path is empty."
+    exit 1
+fi
+
+if [ ! -d $path ]; then
+    echo "$path must be created firstly."
+    exit 1
+fi
+
+cd $path
+
+if [[ ! -f "$path/chainsqld" ]]; then
+    echo "$path/chainsqld may be missed."
+    exit 1
+fi
+
+if [[ ! -f "$path/chainsqld.cfg" ]]; then
+    echo "chainsqld.cfg must be located in the same path with chainsqld."
+    exit 1
+fi
+
+error=`./chainsqld stop 2>/dev/null|jq .error`
+if [[ $error != "null" ]]; then
+    echo "chainsqld has stoppend successfully."
+    exit 0
+fi
+
+echo "chainsqld is stopping."
+
+if $wait; then
+    error=`./chainsqld stop 2>/dev/null|jq .error`
+    while [[ "$error" == "null" ]]; do
+        error=`./chainsqld stop 2>/dev/null|jq .error`
+        sleep 1
+    done
+    echo "chainsqld has stoppend successfully."
+fi
+
+cd $pwd
+
+exit 0

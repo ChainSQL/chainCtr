@@ -1,0 +1,80 @@
+#!/bin/bash
+
+usage() {
+    echo "用于启动 chainsqld "
+    echo
+    echo "usage startChainSQL [options]"
+    echo "  OPTIONS"
+    echo "   --wait		启动 chainSQL 直到链上有数据"
+    echo "   --path		指定 chainSQL 启动路径"
+}
+
+pwd=`pwd`
+
+POSITIONAL=()
+
+wait=false
+path=$pwd
+
+while [[ $# -gt 0 ]]
+do
+    key=$1
+    case $key in
+        --wait)
+            wait=true
+            shift 	# pass argument
+            ;;
+        --path)
+            if [ ! -n "$2" ]; then
+                path=$pwd
+            else
+                path=$2
+            fi
+            shift
+            shift
+            ;;
+        *)
+            usage
+            shift
+            ;;
+    esac
+done
+
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [ -z $path ]; then
+    echo "path is empty."
+    exit 1
+fi
+
+if [ ! -d $path ]; then
+    echo "$path must be created firstly."
+    exit 1
+fi
+
+cd $path
+
+if [[ ! -f "$path/chainsqld" ]]; then
+    echo "$path/chainsqld may be missed."
+    exit 1
+fi
+
+if [[ ! -f "$path/chainsqld.cfg" ]]; then
+    echo "chainsqld.cfg must be located in the same path with chainsqld."
+    exit 1
+fi
+
+./chainsqld 2>/dev/null &
+
+if $wait; then
+    empty=`./chainsqld server_info 2>/dev/null|jq .result.info.complete_ledgers`
+    while [[ "$empty" == "null" || "$empty" == '"empty"' ]]; do
+        empty=`./chainsqld server_info 2>/dev/null|jq .result.info.complete_ledgers`
+        sleep 1
+    done
+fi
+
+cd $pwd
+
+exit 0
+

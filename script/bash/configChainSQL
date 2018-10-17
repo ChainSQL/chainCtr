@@ -1,0 +1,67 @@
+#!/bin/bash
+
+usage() {
+    echo "用于更改 chainsqld 配置文件"
+    echo 
+    echo "usage configChainSQL [options] ..."
+    echo 
+    echo " 更改 mysql 配置用例"
+    echo "  configChainSQL sync_db.type=mysql sync_db.user=root"
+    echo 
+    echo " 更改 publick 和 seed 用例"
+    echo "  configChainSQL validation_public_key=n9Jq6dyM2jbxspDu92qbiz4pq7zg8umnVCmNmEDGGyyJv9XchvVn validation_seed=xnvq8z6C1hpcYPP94dbBib1VyoEQ1"
+    echo 
+    echo " 增加 validators 用例"
+    echo "  configChainSQL validator=n9MGgvfSe1B9FvkPwLJ1HZQKBAiT7fH4Yn4a7BGnkBhH7BK1jL25 validator=n94KRVNkuSqGi71cPxZZCQGGDRga1DV3YTHbKZzsewFgAV8iwEjZ"
+    echo 
+    echo "  OPTIONS"
+    echo "   --path		指定 chainSQL 所在路径"
+    echo 
+}
+
+pwd=`pwd`
+
+POSITIONAL=()
+
+path=$pwd
+
+# for saving configs
+unset configs 
+
+index=0
+while [[ $# -gt 0 ]]
+do
+    key=$1
+    case $key in
+        -h|--help)
+            usage
+            shift
+            ;;
+        --path)
+            if [ ! -n "$2" ]; then
+                path=$pwd
+            else
+                path=$2
+            fi
+            shift
+            shift
+            ;;
+        *)
+            configs[$index]=$1
+            let "index = $index + 1"
+            shift
+            ;;
+    esac
+done
+
+cd $path
+
+for c in ${configs[*]}; do
+    echo $c
+done
+
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+cd $pwd
+
+exit 0

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+jq=`jq --version|grep -e ^jq*|wc -l`
+
+if test $jq -eq 0; then
+    apt-get install jq
+fi
