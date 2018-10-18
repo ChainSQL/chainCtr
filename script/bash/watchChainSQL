@@ -5,9 +5,9 @@ usage() {
     echo
     echo "usage watcheChainSQL [options]"
     echo "  OPTIONS"
-    echo "   -q|--period		指定多少秒刷新一次, 默认 1 秒"
-    echo "   --path		指定 chainSQL 路径"
-    echo "   -c|--count		统计几次后退出"
+    echo "   -p|--period		指定多少秒刷新一次, 默认 1 秒"
+    echo "   --path		        指定 chainSQL 路径"
+    echo "   -c|--count		    统计几次后退出"
 }
 
 pwd=`pwd`

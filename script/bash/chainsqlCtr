@@ -1,0 +1,133 @@
+#!/bin/bash
+
+usage() {
+    echo "用于管理 chainsqld "
+    echo
+    echo "usage chainsqlCtr [command]"
+    echo
+    echo "  COMMANDS"
+    echo "   start [option] 启动 chainsqld"
+    echo "     --wait       启动 chainsqld 直到链上有数据"
+    echo "     --path       指定 chainsqld 路径, 默认在当前路径下"
+
+    echo
+    echo "   stop [option]  停止 chainsqld"
+    echo "     --wait       停止 chainSQL 直到服务请求没有响应"
+    echo "     --path       指定 chainsqld 路径, 默认在当前路径下"
+
+    echo
+    echo "   restart [option]   重启 chainsqld"
+    echo "     --wait           重启 chainSQL 直到链上有数据"
+    echo "     --path           指定 chainsqld 路径, 默认在当前路径下"
+
+    echo
+    echo "   watch [option] 查看 chainsqld 运行信息"
+    echo "     --wait       同步等待启动/停止 chainsqld 信息"
+    echo "     --path       指定 chainsqld 路径, 默认在当前路径下"
+    echo "     -p|--period  指定多少秒刷新一次, 默认 1 秒"
+    echo "     -c|--count   统计几次后退出"
+
+    echo
+    echo "   config [option] k=v ...    配置 chainsqld 配置信息"
+    echo "     --path                   指定 chainsqld 路径, 默认在当前路径下"
+    echo
+    echo "   例1，更改 sync_db 配置"
+    echo "    chainsqlCtr --path ~/peersafe sync_db.type=mysql sync_db.host=localhost sync_db.user=root"
+    echo
+    echo "   例2，设置 publick key 和 seed"
+    echo "    chainsqlCtr --path ~/peersafe validation_public_key=n9Jq6dyM2jbxspDu92qbiz4pq7zg8umnVCmNmEDGGyyJv9XchvVn validation_seed=xnvq8z6C1hpcYPP94dbBib1VyoEQ1"
+
+    echo
+    echo "   例3，增加 ips"
+    echo "    chainsqlCtr --path ~/peersafe ips_fixed=172.16.18.2 ips_fixed=172.16.18.3"
+
+    echo
+}
+
+pwd=`pwd`
+
+echo $pwd
+
+./script/bash/depens
+
+POSITIONAL=()
+
+wait=false
+path=$pwd
+
+restart() {
+    POSITIONAL=()
+    wait=false
+    path=$pwd
+    while [[ $# -gt 0 ]]
+    do
+        key=$1
+        case $key in
+            --wait)
+                wait=true
+                shift 	# pass argument
+                ;;
+            --path)
+                if [ ! -n "$2" ]; then
+                    path=$pwd
+                else
+                    path=$2
+                fi
+                shift
+                shift
+                ;;
+            *)
+                usage
+                shift
+                ;;
+        esac
+    done
+
+    set -- "${POSITIONAL[@]}" # restore positional parameters
+
+    ./script/bash/stopChainSQL --path $path --wait
+    if $wait; then
+        ./script/bash/startChainSQL --path $path --wait
+    else
+        ./script/bash/startChainSQL --path $path
+    fi
+}
+
+while [[ $# -gt 0 ]]
+do
+    key=$1
+    case $key in
+        start)
+            shift 	# pass argument
+            ./script/bash/startChainSQL $@
+            exit $? 
+            ;;
+        stop)
+            shift
+            ./script/bash/stopChainSQL $@
+            exit $? 
+            ;;
+        watch)
+            shift
+            ./script/bash/watchChainSQL $@
+            exit $?
+            ;;
+        restart)
+            shift
+            restart $@
+            exit $?
+            ;;
+        config)
+            shift
+            ./script/bash/configChainSQL $@
+            exit $?
+            ;;
+        *)
+            usage
+            shift
+            ;;
+    esac
+done
+
+set -- "${POSITIONAL[@]}" # restore positional parameters
+

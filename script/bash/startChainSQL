@@ -64,17 +64,40 @@ if [[ ! -f "$path/chainsqld.cfg" ]]; then
     exit 1
 fi
 
-./chainsqld 2>/dev/null &
+server_info=`./chainsqld server_info 2>/dev/null`
+has_error=`echo $server_info | jq 'has("error")'`
 
-if $wait; then
-    empty=`./chainsqld server_info 2>/dev/null|jq .result.info.complete_ledgers`
-    while [[ "$empty" == "null" || "$empty" == '"empty"' ]]; do
-        empty=`./chainsqld server_info 2>/dev/null|jq .result.info.complete_ledgers`
-        sleep 1
-    done
+# 没有启动 chainsqld
+if $has_error; then
+
+    echo "chainsqld is starting."
+
+    ./chainsqld 2>/dev/null &
+
+    if $wait; then
+        sleep 2
+        while true; do
+            server_info=`./chainsqld server_info 2>/dev/null`
+            has_error=`echo $server_info | jq 'has("error")'`
+            if $has_error; then
+                echo "chainsqld may have been stopped" 
+                exit 0
+            else
+                server_info=`./chainsqld server_info 2>/dev/null|jq .result.info.complete_ledgers`
+                if [[ "$server_info" != '"empty"' ]]; then
+                    break
+                fi
+            fi
+            sleep 1
+        done
+
+        echo "chainsqld has started successfully."
+    fi
+
+else
+    echo "chainsqld has started."
 fi
 
 cd $pwd
-
 exit 0
 
