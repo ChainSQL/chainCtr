@@ -79,6 +79,7 @@ restart() {
             *)
                 usage
                 shift
+                exit 0
                 ;;
         esac
     done
@@ -125,6 +126,7 @@ do
         *)
             usage
             shift
+            exit 0
             ;;
     esac
 done

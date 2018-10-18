@@ -55,6 +55,7 @@ do
         -h|--help)
             usage
             shift
+            exit 0
             ;;
         --path)
             if [ ! -n "$2" ]; then

@@ -7,6 +7,7 @@ usage() {
     echo "  OPTIONS"
     echo "   --wait		启动 chainSQL 直到链上有数据"
     echo "   --path		指定 chainSQL 启动路径"
+    echo
 }
 
 pwd=`pwd`
@@ -36,6 +37,7 @@ do
         *)
             usage
             shift
+            exit 0
             ;;
     esac
 done
