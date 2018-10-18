@@ -25,6 +25,25 @@ POSITIONAL=()
 
 path=$pwd
 
+config_patthen=(sync_db.type sync_db.host sync_db.user sync_db.pass sync_db.db sync_db.charset \ 
+                validation_public_key validation_seed validator \
+                node_db.type node_db.path node_db.open_files node_db.filter_bits node_db.cache_mb \
+                node_db.file_size_mb node_db.file_size_mult node_db.advisory_delete \ 
+                ledger_history database_path debug_logfile ips_fixed node_size \
+                port_peer.port port_peer.ip port_peer.protocol \
+                port_ws_admin_local.port port_ws_admin_local.ip port_ws_admin_local.admin port_ws_admin_local.protocol \ 
+                port_rpc_admin_local.port  port_rpc_admin_local.ip port_rpc_admin_local.admin port_rpc_admin_local.protocol \
+                sync_tables rpc_startup auto_sync ssl_verify)
+is_config() {
+    for p in ${config_patthen[*]}; do
+        match=`echo $1|grep -e ^$p|wc -l`
+        if [ $match -gt 0 ]; then
+            return 1
+        fi
+    done
+    return 0 
+}
+
 # for saving configs
 unset configs 
 
@@ -53,14 +72,189 @@ do
             ;;
     esac
 done
+set -- "${POSITIONAL[@]}" # restore positional parameters
 
 cd $path
 
-for c in ${configs[*]}; do
-    echo $c
-done
+config_name=chainsqld.cfg
 
-set -- "${POSITIONAL[@]}" # restore positional parameters
+exit_with_error() {
+    echo "参数输入有误，请重新输入"
+    echo 
+    echo "Getting more help via input -h"
+    exit 1
+}
+
+if [ ! -f $config_name ]; then
+    echo "Make sure you have $config_name in $path" >&2
+    exit 1
+fi
+
+# 获取配置文件中指定段的行号
+# 参数1 段名，比如 [sync_db]
+locate_section() {
+    number=`grep -n -e "^$1" $config_name`
+    return `echo $number | cut -d':' -f1`
+}
+
+# 获取配置在某个段中的相对位置
+# 参数1 某段的开始位置, 由 locate_section 函数获取
+# 参数2 某段所包含的配置项有多少
+# 参数3 某段中包含的配置
+# [sync_db]
+# type=mysql
+locate_value_in_section() {
+    from=$1
+    let "end = $from + $2"
+    number=`sed -n "$from,$end p" $config_name | grep -n -e "^$3"`
+    line=`echo $number | cut -d':' -f1`
+    let "line=$line - 1"
+    return $line
+}
+
+# 在某个 section 下插入 kv 配置
+# 参数1 段名称
+# 参数2 key 
+# 参数3 value 
+# 用例
+# [sync_db]
+# type=mysql
+muitl_settings_in_section() {
+    locate_section "\[$1\]"
+    sync_db_line_number=$? 
+
+    if [[ $sync_db_line_number -eq 0 ]]; then
+        echo "" >> $config_name
+        sed -i "$ a [$1]" $config_name
+        sed -i "$ a $2=$3" $config_name
+    else
+        locate_value_in_section $sync_db_line_number 15 $2 
+        key_line_number=$?
+        if [[ "$key_line_number" == "255" ]]; then
+            # 说明没有配置，需要插入
+            let "key_line_number = $sync_db_line_number + 1"
+            #echo "sed -i '$key_line_number i $2=$3' $config_name"
+            sed -i "$key_line_number i $2=$3" $config_name
+        else
+            let "key_line_number = $sync_db_line_number + $key_line_number"
+            #echo "sed -i '$key_line_number c $2=$3' $config_name"
+            sed -i "$key_line_number c $2=$3" $config_name
+        fi
+    fi
+}
+
+# 在某个 section 下插入单值配置
+# 参数1 段名称
+# 参数2 value 
+# 用例
+# [seed]
+# xnvq8z6C1hpcYPP94dbBib1VyoEQ1
+single_setting_in_section() {
+    locate_section "\[$1\]"
+    section_line_number=$? 
+    
+    if [[ "$section_line_number" == "0" ]]; then
+        echo "" >> $config_name
+        sed -i "$ a [$1]" $config_name
+        sed -i "$ a $2" $config_name
+    else
+        let "key_line_number = $section_line_number + 1"
+        sed -i "$key_line_number c $2" $config_name
+    fi
+}
+
+# 在某个 section 下增加配置
+# 参数1 段名称
+# 参数2 value 
+# 用例
+# [ips_fixed]
+# 172.16.18.2
+# 172.16.18.3
+append_setting_in_section() {
+    locate_section "\[$1\]"
+    section_line_number=$? 
+    
+    if [[ "$section_line_number" == "0" ]]; then
+        echo "" >> $config_name
+        sed -i "$ a [$1]" $config_name
+        sed -i "$ a $2" $config_name
+    else
+        let "key_line_number = $section_line_number + 1"
+        echo "insert into $key_line_number"
+        sed -i "$key_line_number i $2" $config_name
+    fi
+}
+
+handle_config() {
+    key=`echo $1 | cut -d'=' -f1`
+    value=`echo $1 | cut -d'=' -f2`
+
+    # 修改配置的时候必须指定值
+    if [[ "$key"E == "$value"E ]]; then
+        exit_with_error
+    fi
+
+    unset array
+    index=0
+    for c in $(echo $key | tr "." "\n"); do
+        array[$index]=$c
+        let "index = $index + 1"
+    done
+    
+    key=${array[0]}
+    if [[ "$key"E == "sync_db"E ]]; then
+        muitl_settings_in_section "sync_db" ${array[1]} $value
+    elif [[ "$key"E == "node_db"E ]]; then
+        muitl_settings_in_section "node_db" ${array[1]} $value
+    elif [[ "$key"E == "port_rpc_admin_local"E ]]; then
+        muitl_settings_in_section "port_rpc_admin_local" ${array[1]} $value
+    elif [[ "$key"E == "port_peer"E ]]; then
+        muitl_settings_in_section "port_peer" ${array[1]} $value
+    elif [[ "$key"E == "port_ws_admin_local"E ]]; then
+        muitl_settings_in_section "port_ws_admin_local" ${array[1]} $value
+    elif [[ "$key"E == "validation_public_key"E ]]; then
+        single_setting_in_section "validation_public_key" $value
+    elif [[ "$key"E == "validation_seed"E ]]; then
+        single_setting_in_section "validation_seed" $value
+    elif [[ "$key"E == "auto_sync"E ]]; then
+        single_setting_in_section "auto_sync" $value
+    elif [[ "$key"E == "ssl_verify"E ]]; then
+        single_setting_in_section "ssl_verify" $value
+    elif [[ "$key"E == "ledger_history"E ]]; then
+        single_setting_in_section "ledger_history" $value
+    elif [[ "$key"E == "database_path"E ]]; then
+        single_setting_in_section "database_path" $value
+    elif [[ "$key"E == "debug_logfile"E ]]; then
+        single_setting_in_section "debug_logfile" $value
+    elif [[ "$key"E == "node_size"E ]]; then
+        single_setting_in_section "node_size" $value
+    elif [[ "$key"E == "ips_fixed"E ]]; then
+        append_setting_in_section "ips_fixed" $value
+    elif [[ "$key"E == "validator"E ]]; then
+        append_setting_in_section "validators" $value
+    fi
+}
+
+validated() {
+
+    for c in ${configs[*]}; do
+        is_config $c
+        if [[ $? -ne 1 ]]; then
+            echo "Not support `echo $c | cut -d'=' -f1`"
+            return 0
+        fi
+    done
+    return 1
+}
+
+validated
+if [[ $? == 1 ]]; then
+    for c in ${configs[*]}; do
+        handle_config $c
+    done
+else
+    exit_with_error
+fi
 
 cd $pwd
 
