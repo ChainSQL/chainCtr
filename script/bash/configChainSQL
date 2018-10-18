@@ -26,7 +26,7 @@ POSITIONAL=()
 path=$pwd
 
 config_patthen=(sync_db.type sync_db.host sync_db.user sync_db.pass sync_db.db sync_db.charset \ 
-                validation_public_key validation_seed validator \
+                validation_public_key validation_seed validators \
                 node_db.type node_db.path node_db.open_files node_db.filter_bits node_db.cache_mb \
                 node_db.file_size_mb node_db.file_size_mult node_db.advisory_delete \ 
                 ledger_history database_path debug_logfile ips_fixed node_size \
@@ -230,7 +230,7 @@ handle_config() {
         single_setting_in_section "node_size" $value
     elif [[ "$key"E == "ips_fixed"E ]]; then
         append_setting_in_section "ips_fixed" $value
-    elif [[ "$key"E == "validator"E ]]; then
+    elif [[ "$key"E == "validators"E ]]; then
         append_setting_in_section "validators" $value
     fi
 }

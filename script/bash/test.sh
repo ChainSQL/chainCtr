@@ -13,4 +13,4 @@
 
 ./configChainSQL --path ~/ ips_fixed=172.16.18.2 ips_fixed=172.16.18.3
 
-./configChainSQL --path ~/ validator=n9MGgvfSe1B9FvkPwLJ1HZQKBAiT7fH4Yn4a7BGnkBhH7BK1jL25 validator=n94KRVNkuSqGi71cPxZZCQGGDRga1DV3YTHbKZzsewFgAV8iwEjZ validator=n9Jbd6Rj9xuftDCcvfECEFUmXDcoTM7yTSVAHjVtA6ku1dCbJZ3b
+./configChainSQL --path ~/ validators=n9MGgvfSe1B9FvkPwLJ1HZQKBAiT7fH4Yn4a7BGnkBhH7BK1jL25 validators=n94KRVNkuSqGi71cPxZZCQGGDRga1DV3YTHbKZzsewFgAV8iwEjZ validators=n9Jbd6Rj9xuftDCcvfECEFUmXDcoTM7yTSVAHjVtA6ku1dCbJZ3b
