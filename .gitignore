@@ -9,6 +9,7 @@ bin/db
 
 script/*.pyc
 script/net/*.pyc
+script/python/*.pyc
 
 master
 

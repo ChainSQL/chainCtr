@@ -6,6 +6,7 @@ class node:
     def __init__(self, id = None):
         self.id = None
         self.host = None
+        self.validated = False  # 是否是验证节点
         self.conf = chainsqlCfg()
         # 0 停止状态
         # 1 运行状态

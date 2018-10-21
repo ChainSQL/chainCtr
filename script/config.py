@@ -8,7 +8,7 @@ def get_line_number(key, file_path):
     grep = 'grep -n "' + key + '" ' + file_path
     line_num = os.popen(grep).read()
     if not line_num:
-        return -1;
+        return -1
     else:
         vector = line_num.split(':')
         return int(vector[0])
