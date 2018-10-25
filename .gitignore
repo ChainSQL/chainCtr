@@ -10,6 +10,7 @@ bin/db
 script/*.pyc
 script/net/*.pyc
 script/python/*.pyc
+script/python/proto/*.pyc
 
 master
 

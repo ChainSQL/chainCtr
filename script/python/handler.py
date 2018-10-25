@@ -53,6 +53,11 @@ class joinHandler(handler):
         return public_key
 
 
+class startHandler(handler):
+    def __init__(self, request):
+        pass
+
+
 def test_handleJoinRequest():
     try:
         join = request.joinRequest(1000)
