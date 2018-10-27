@@ -120,6 +120,7 @@ class nodes:
         self.__conn__ = conn
 
     def append(self, node):
+        nodeid = None
         try:
             c = self.__conn__.conn.cursor()
             public_key = (node.conf.validation_public_key,)
@@ -130,27 +131,32 @@ class nodes:
                 c.execute('insert into nodes(host,public_key,validated,restarts,status) \
                             values(?,?,?,?,?)', values)
                 
+                nodeid = c.lastrowid
+
                 rpc = node.conf.port_rpc_admin_local
                 peer = node.conf.port_peer
                 ws = node.conf.port_ws_admin_local
-                services = [(c.lastrowid, rpc.port, rpc.ip, rpc.admin, rpc.protocol),
-                            (c.lastrowid, peer.port, peer.ip, None, peer.protocol),
-                            (c.lastrowid, ws.port, ws.ip, ws.admin, ws.protocol)]
+                services = [(nodeid, rpc.port, rpc.ip, rpc.admin, rpc.protocol),
+                            (nodeid, peer.port, peer.ip, None, peer.protocol),
+                            (nodeid, ws.port, ws.ip, ws.admin, ws.protocol)]
 
                 c.executemany('insert into service values(?,?,?,?,?)', services)
             else:
-                self.update(node)
+                nodeid = self.update(node)
 
             self.__conn__.conn.commit()
         except Exception as e:
             self.__conn__.conn.rollback()
             raise e
 
+        return nodeid
+
     '''
     描述:   根据 id 或是 public key 更新节点信息
             更新的信息包括 public key 和 rpc，peer 和 websocket 服务
     '''
     def update(self, node):
+        node_id = None
         try:
             c = self.__conn__.conn.cursor()
             update = (node.conf.validation_public_key,node.id)
@@ -177,7 +183,7 @@ class nodes:
         except Exception as e:
             self.__conn__.conn.rollback()
             raise e
-        return True
+        return node_id 
 
     '''
     描述:   根据 id 或是 public key 获取节点信息
