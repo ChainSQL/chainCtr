@@ -8,9 +8,8 @@ import node
 import db
 
 class joinHandler(handler.handler):
-    def __init__(self, db, request):
-        handler.handler.__init__(self, request)
-        self.db = db
+    def __init__(self, request, db):
+        handler.handler.__init__(self, request, db=db, announce=None)
 
     def __check__(self):
         if self.request.has_key('command') == False or self.request['command'] != 'join' \
@@ -37,7 +36,21 @@ class joinHandler(handler.handler):
         n.status = 0
         n.validated = self.request['info']['validated']
         n.conf.validation_public_key = self.request['info']['validator']['validation_public_key']
+
+        if self.request['info'].has_key('rpc'):
+            n.conf.port_rpc_admin_local.port = self.request['info']['rpc']['port']
+            n.conf.port_rpc_admin_local.ip = self.request['info']['rpc']['ip']
+            n.conf.port_rpc_admin_local.admin = self.request['info']['rpc']['admin']
         
+        if self.request['info'].has_key('peer'):
+            n.conf.port_peer.port = self.request['info']['peer']['port']
+            n.conf.port_peer.ip = self.request['info']['peer']['ip']
+
+        if self.request['info'].has_key('ws'):
+            n.conf.port_ws_admin_local.port = self.request['info']['ws']['port']
+            n.conf.port_ws_admin_local.ip = self.request['info']['ws']['ip']
+            n.conf.port_ws_admin_local.admin = self.request['info']['ws']['admin']
+
         node_id = self.db.nodes().append(n)
 
         res = request.joinResponse(0, self.id)
@@ -51,11 +64,11 @@ def test_handleJoinRequest():
         req = request.joinRequest(host='192.168.31.22', validated=True, id=10000)
         #validator = {'validation_public_key':'n9Jq6dyM2jbxspDu92qbiz4pq7zg8umnVCmNmEDGGyyJv9XchvVn'}
         #req.addValidator(validator)
-        req.addRPC({'port':5005, 'ip':'0.0.0.0', 'admin':'127.0.0.1'})
-        req.addPeer({'port':51235, 'ip':'0.0.0.0'})
-        req.addWebsocket({'port':6006, 'ip':'0.0.0.0', 'admin':'127.0.0.1'})
+        req.addRPC({'port':5005, 'ip':'192.168.31.22', 'admin':'127.0.0.1'})
+        req.addPeer({'port':51235, 'ip':'192.168.31.22'})
+        req.addWebsocket({'port':6006, 'ip':'192.168.31.22', 'admin':'127.0.0.1'})
 
-        handler = joinHandler(database, json.dumps(req.dumps()))
+        handler = joinHandler(json.dumps(req.dumps()), database)
         res = handler.process()
         r = res.dumps()
         assert r['error_code'] == 1000, "error code was wrong"
@@ -68,11 +81,11 @@ def test_handleJoinRequest():
         req = request.joinRequest(host='192.168.31.22', id=10000, validated=True)
         validator = {'validation_public_key':'n9Jq6dyM2jbxspDu92qbiz4pq7zg8umnVCmNmEDGGyyJv9XchvVn'}
         req.addValidator(validator)
-        req.addRPC({'port':5005, 'ip':'0.0.0.0', 'admin':'127.0.0.1'})
-        req.addPeer({'port':51235, 'ip':'0.0.0.0'})
-        req.addWebsocket({'port':6006, 'ip':'0.0.0.0', 'admin':'127.0.0.1'})
+        req.addRPC({'port':5005, 'ip':'192.168.31.22', 'admin':'127.0.0.1'})
+        req.addPeer({'port':51235, 'ip':'192.168.31.22'})
+        req.addWebsocket({'port':6006, 'ip':'192.168.31.22', 'admin':'127.0.0.1'})
 
-        handler = joinHandler(database, json.dumps(req.dumps()))
+        handler = joinHandler(json.dumps(req.dumps()), database)
         res = handler.process()
         r = res.dumps()
         assert r['error_code'] == 0, "error code was wrong"
