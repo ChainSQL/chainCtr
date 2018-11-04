@@ -370,7 +370,23 @@ class nodes:
             raise e
 
         return True
-        
+
+    def getValidators(self, records = []):
+        '''
+        获取是 validated 的节点 public_key 和 peer port
+        '''
+        c = self.__conn__.conn.cursor()
+        query = 'select n.id,n.host,n.public_key,s.port,s.ip \
+        from nodes as n,service as s \
+        where n.validated = 1 and n.id = s.id and s.protocol=\'%s\'' % 'peer'
+        for row in c.execute(query):
+            node = {}
+            node['id'] = row[0]
+            node['host'] = row[1]
+            node['public_key'] = row[2]
+            node['peer_port'] = row[3]
+            node['peer_ip'] = row[4]
+            records.append(node)
 
 def test_connect():
     try:

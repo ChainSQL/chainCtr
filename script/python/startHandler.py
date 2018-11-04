@@ -26,6 +26,9 @@ class startHandler(handler.handler):
 
         # 通知其他节点启动 chainsqld
         self.announce.emit(self.request)
+        
+        res = request.startResponse(0, self.id)
+
         return res
 
     def __check__(self):
@@ -33,19 +36,36 @@ class startHandler(handler.handler):
             return False
         return True
 
+class test_announce(handler.announce):
+    def __init__(self, db):
+        handler.announce.__init__(self)
+        self.__db__ = db
+
+    def emit(self, req):
+        nodes = []
+        self.__db__.nodes().getValidators(nodes)
+
+        announce = request.announceStartRequest(req['id'] + 1)
+        ips_fixed = []
+        validators = []
+
+        for n in nodes:
+            ips_fixed.append('%s %d' % (n['peer_ip'], n['peer_port']))
+            validators.append(n['public_key'])
+
+        announce.add_ips_fixed(ips_fixed)
+        announce.add_validators(validators)
+
+        print 'Announce other nodes to start chainsqld: '
+        print announce.dumps()
+
 def test_startHandler():
-    class test:
-        def __init__(self):
-            pass
-        
-        def __del__(self):
-            print 'del'
+    start = request.startRequest(id = 10000)
+    start.setNodeID(1)
 
-        def run(self):
-            pass
-
-    t = test()
-    print t
+    database = db.connect('G:\\develop\\config.db')
+    handler = startHandler(json.dumps(start.dumps()), database, test_announce(database))
+    handler.process()
 
 if __name__ == '__main__':
     test_startHandler()

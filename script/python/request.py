@@ -254,8 +254,7 @@ class startResponse(response):
         'error_code': 0,
         'id': 10000,
         'result': {
-            'ips_fixed': ['172.16.18.2 51235', '172.16.18.3 51235'],
-            'validators': ['xxx1', 'xxx2']
+            'command': 'start'
         }
     }
     '''
@@ -263,15 +262,62 @@ class startResponse(response):
         response.__init__(self, error_code, id)
         self.__command__('start')
 
+    #def add_ips_fixed(self, ips):
+    #    result = self.__result__()
+    #    for ip in ips:
+    #        result.append('ips_fixed', ip)
+
+    #def add_validators(self, validators):
+    #    result = self.__result__()
+    #    for v in validators:
+    #        result.append('validators', v)
+
+class announceStartRequest(request):
+    '''
+    master 节点在收到某个节点发送 startRequest 后，
+    需要通知其他的节点启动 chainsqld 服务
+
+    {
+        'command': 'announceStart',
+        'id': 1000,
+        'info': {
+            'ips_fixed': ['172.16.18.2 51235', '172.16.18.3 51235'],
+            'validators': ['xxx1', 'xxx2']
+        }
+    }
+
+    '''
+    def __init__(self, id = None):
+        request.__init__(self, 'announceStart', id)
+
     def add_ips_fixed(self, ips):
-        result = self.__result__()
-        for ip in ips:
-            result.append('ips_fixed', ip)
+        assert isinstance(ips, list), 'ips must be list'
+        info = self.__info__()
+        info['ips_fixed'] = ips
 
     def add_validators(self, validators):
+        assert isinstance(validators, list), 'validators must be list'
+        info = self.__info__()
+        info['validators'] = validators
+
+class announceStartResponse(response):
+    '''
+    {
+        'error_code': 0,
+        'id': 10000,
+        'result': {
+            'command': 'announceStart',
+            'started': 'success' # chainsqld 是否启动成功
+        }
+    }
+    '''
+    def __init__(self, error_code, id):
+        response.__init__(self, error_code, id)
+        self.__command__('announceStart')
+
+    def started(self, status):
         result = self.__result__()
-        for v in validators:
-            result.append('validators', v)
+        result['started'] = status
 
 class stopRequest(request):
     '''
