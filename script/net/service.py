@@ -8,7 +8,9 @@ import SocketServer
 
 class Echo(asyncore.dispatcher_with_send):
     def handle_close(self):
+        print 'A client closed.', self.addr
         self.close()
+
     def handle_read(self):
         print self.recv(8192)
 
@@ -33,7 +35,7 @@ class TCPServer(asyncore.dispatcher):
     def handle_accept(self):
         newClient = self.accept()
         if newClient is not None:
-            sock, addr = newClient
+            #sock, addr = newClient
             self.handler.dispatch(newClient)
 
     def run_forever(self):

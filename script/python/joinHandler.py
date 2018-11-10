@@ -28,7 +28,7 @@ class joinHandler(handler.handler):
         if self.__check__() == False:
             res = request.joinResponse(1000, self.id)
             res.setErrorMsg('check failure')
-            return res
+            return res.dumps()
 
         n = node.node()
         n.host = self.request['info']['host']
@@ -56,7 +56,7 @@ class joinHandler(handler.handler):
         res = request.joinResponse(0, self.id)
         res.setNodeID(node_id)
 
-        return res
+        return res.dumps()
 
 def test_handleJoinRequest():
     def failure():
@@ -69,8 +69,8 @@ def test_handleJoinRequest():
         req.addWebsocket({'port':6006, 'ip':'192.168.31.22', 'admin':'127.0.0.1'})
 
         handler = joinHandler(json.dumps(req.dumps()), database)
-        res = handler.process()
-        r = res.dumps()
+        r = handler.process()
+        #r = res.dumps()
         assert r['error_code'] == 1000, "error code was wrong"
         assert r['id'] == 10000, "id was wrong"
         assert r['result'] != None, "result was wrong"
@@ -86,8 +86,8 @@ def test_handleJoinRequest():
         req.addWebsocket({'port':6006, 'ip':'192.168.31.22', 'admin':'127.0.0.1'})
 
         handler = joinHandler(json.dumps(req.dumps()), database)
-        res = handler.process()
-        r = res.dumps()
+        r = handler.process()
+        #r = res.dumps()
         assert r['error_code'] == 0, "error code was wrong"
         assert r['id'] == 10000, "id was wrong"
         assert r['result'] != None, "result was wrong"

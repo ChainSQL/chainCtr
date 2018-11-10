@@ -29,7 +29,7 @@ class startHandler(handler.handler):
         
         res = request.startResponse(0, self.id)
 
-        return res
+        return res.dumps()
 
     def __check__(self):
         if self.request.has_key('command') == False or self.request['command'] != 'start':
